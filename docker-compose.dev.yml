@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # Application Server (Development)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: unbound-app-dev
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: sqlite:./unbound.db
+      CORS_ORIGIN: http://localhost:5173
+    volumes:
+      - ./server:/app
+      - ./logs:/app/logs
+      - ./unbound.db:/app/unbound.db
+    ports:
+      - "3000:3000"
+    networks:
+      - unbound-dev-network
+    restart: unless-stopped
+
+  # Client Development Server
+  client:
+    build:
+      context: ./client
+      dockerfile: ../Dockerfile.client
+    container_name: unbound-client-dev
+    environment:
+      VITE_API_BASE_URL: http://localhost:3000
+      VITE_WS_URL: ws://localhost:3000
+      VITE_ENABLE_ANALYTICS: false
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    networks:
+      - unbound-dev-network
+    restart: unless-stopped
+
+networks:
+  unbound-dev-network:
+    driver: bridge
