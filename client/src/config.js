@@ -1,8 +1,8 @@
 // Client configuration
 export const config = {
   // API Configuration
-  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000',
-  WS_URL: import.meta.env.VITE_WS_URL || 'ws://localhost:3000',
+  API_BASE_URL: getSecureApiUrl(),
+  WS_URL: getSecureWebSocketUrl(),
   
   // Environment
   NODE_ENV: import.meta.env.NODE_ENV || 'development',
@@ -24,9 +24,53 @@ export const config = {
   POSTS_PER_PAGE: parseInt(import.meta.env.VITE_POSTS_PER_PAGE) || 50,
   MAX_CONTENT_LENGTH: parseInt(import.meta.env.VITE_MAX_CONTENT_LENGTH) || 10000,
   
+  // Feed Settings
+  DEFAULT_FEED_STRATEGY: import.meta.env.VITE_DEFAULT_FEED_STRATEGY || 'algorithmic',
+  ENABLE_ALGORITHMIC_FEED: import.meta.env.VITE_ENABLE_ALGORITHMIC_FEED !== 'false',
+  ENABLE_SEARCH: import.meta.env.VITE_ENABLE_SEARCH !== 'false',
+  
   // Security
   ENABLE_CONTENT_WARNING: import.meta.env.VITE_ENABLE_CONTENT_WARNING !== 'false',
+  REQUIRE_SSL: import.meta.env.VITE_REQUIRE_SSL === 'true',
 };
+
+// Helper function to determine secure API URL
+function getSecureApiUrl() {
+  const isDev = !import.meta.env.PROD;
+  const isSecureConnection = typeof window !== 'undefined' && 
+    (window.location.protocol === 'https:' || window.location.hostname === 'localhost');
+  
+  if (isDev) {
+    return import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+  }
+  
+  const customUrl = import.meta.env.VITE_API_BASE_URL;
+  if (customUrl) {
+    return customUrl;
+  }
+  
+  // Production HTTPS
+  return 'https://your-domain.com';
+}
+
+// Helper function to determine secure WebSocket URL
+function getSecureWebSocketUrl() {
+  const isDev = !import.meta.env.PROD;
+  const isSecureConnection = typeof window !== 'undefined' && 
+    (window.location.protocol === 'https:' || window.location.hostname === 'localhost');
+  
+  if (isDev) {
+    return import.meta.env.VITE_WS_URL || 'ws://localhost:3000';
+  }
+  
+  const customUrl = import.meta.env.VITE_WS_URL;
+  if (customUrl) {
+    return customUrl;
+  }
+  
+  // Production WSS
+  return 'wss://your-domain.com';
+}
 
 // Utility functions for configuration
 export const getApiUrl = (path = '') => {

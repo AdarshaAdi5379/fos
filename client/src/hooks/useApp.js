@@ -1,26 +1,42 @@
-import { useState, useEffect, useContext, createContext } from 'react';
-import { useWebSocket } from './useWebSocket';
+import { useState, useEffect } from 'react';
 
-const AppContext = createContext({
-  identity: null,
-  posts: [],
-  theme: 'light',
-  viewMode: 'chronological',
-  filters: {},
-  wsConnection: null
-});
-
+/**
+ * useApp - Application state hook
+ * 
+ * Provides reactive state management for identity, posts, view mode and filters.
+ * Uses React useState so changes trigger re-renders correctly.
+ */
 export const useApp = () => {
-  const context = useContext(AppContext);
-  
-  const setIdentity = (identity) => {
-    context.identity = identity;
-    // Store in localStorage for persistence
-    if (identity) {
-      localStorage.setItem('unbound-identity', JSON.stringify(identity));
+  const [identity, setIdentityState] = useState(null);
+  const [posts, setPostsState] = useState([]);
+  const [theme, setThemeState] = useState('light');
+  const [viewMode, setViewModeState] = useState('chronological');
+  const [filters, setFiltersState] = useState({});
+  const [wsConnection, setWsConnectionState] = useState(null);
+
+  // Initialize from localStorage on first load
+  useEffect(() => {
+    const storedIdentity = getStoredIdentity();
+    if (storedIdentity) {
+      setIdentityState(storedIdentity);
+    }
+
+    const storedViewMode = getStoredViewMode();
+    if (storedViewMode) {
+      setViewModeState(storedViewMode);
+    }
+  }, []);
+
+  const setIdentity = (newIdentity) => {
+    setIdentityState(newIdentity);
+    // Persist to localStorage for session persistence
+    if (newIdentity) {
+      localStorage.setItem('unbound-identity', JSON.stringify(newIdentity));
+    } else {
+      localStorage.removeItem('unbound-identity');
     }
   };
-  
+
   const getStoredIdentity = () => {
     try {
       const stored = localStorage.getItem('unbound-identity');
@@ -30,43 +46,35 @@ export const useApp = () => {
       return null;
     }
   };
-  
-  const setPosts = (posts) => {
-    context.posts = posts;
+
+  const setPosts = (newPosts) => {
+    setPostsState(newPosts);
   };
-  
+
   const setViewMode = (mode) => {
-    context.viewMode = mode;
+    setViewModeState(mode);
     localStorage.setItem('unbound-view-mode', mode);
   };
-  
+
   const getStoredViewMode = () => {
     return localStorage.getItem('unbound-view-mode') || 'chronological';
   };
-  
-  const setFilters = (filters) => {
-    context.filters = filters;
+
+  const setFilters = (newFilters) => {
+    setFiltersState(newFilters);
   };
-  
+
   const setWebSocketConnection = (connection) => {
-    context.wsConnection = connection;
+    setWsConnectionState(connection);
   };
-  
-  // Initialize from localStorage on first load
-  useEffect(() => {
-    const storedIdentity = getStoredIdentity();
-    if (storedIdentity) {
-      setIdentity(storedIdentity);
-    }
-    
-    const storedViewMode = getStoredViewMode();
-    if (storedViewMode) {
-      setViewMode(storedViewMode);
-    }
-  }, []);
-  
+
   return {
-    ...context,
+    identity,
+    posts,
+    theme,
+    viewMode,
+    filters,
+    wsConnection,
     setIdentity,
     getStoredIdentity,
     setPosts,

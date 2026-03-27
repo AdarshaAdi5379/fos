@@ -1,5 +1,5 @@
 const rateLimit = require('express-rate-limit');
-const config = require('../config/environment');
+const config = require('./config/environment');
 
 // Redis store for rate limiting (if Redis is configured)
 let RedisStore;
@@ -46,7 +46,7 @@ const createRateLimiter = (windowMs, max, message) => {
   return rateLimit(limiterOptions);
 };
 
-const rateLimits = config.rateLimits;
+const rateLimits = config.rateLimiting;
 
 const postLimiter = createRateLimiter(
   rateLimits.windowMs,

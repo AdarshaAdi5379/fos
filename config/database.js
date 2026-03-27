@@ -38,6 +38,24 @@ class DatabaseConfig {
           reject(err);
         } else {
           console.log('Connected to SQLite database');
+          
+          // Add query method for compatibility
+          db.query = function(sql, params = []) {
+            return new Promise((resolveQuery, rejectQuery) => {
+              if (sql.trim().toLowerCase().startsWith('select')) {
+                db.all(sql, params, (err, rows) => {
+                  if (err) rejectQuery(err);
+                  else resolveQuery(rows);
+                });
+              } else {
+                db.run(sql, params, function(err) {
+                  if (err) rejectQuery(err);
+                  else resolveQuery({ lastID: this.lastID, changes: this.changes });
+                });
+              }
+            });
+          };
+          
           resolve(db);
         }
       });

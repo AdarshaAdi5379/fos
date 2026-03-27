@@ -4,4 +4,7 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  ssr: {
+    noExternal: ['@scure/bip39', '@noble/secp256k1', '@noble/hashes']
+  }
 })

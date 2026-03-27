@@ -1,12 +1,7 @@
-import * as bip39 from '@scure/bip39';
-import * as secp from '@noble/secp256k1';
-import { sha256 } from '@noble/hashes/sha2.js';
-import { hmac } from '@noble/hashes/hmac.js';
+import { generateMnemonic, validateMnemonic, mnemonicToSeed } from '@scure/bip39';
+import { getPublicKey, sign, verify } from '@noble/secp256k1';
+// Using Web Crypto API instead of @noble/hashes for better browser compatibility
 import { wordlist } from '@scure/bip39/wordlists/english.js';
-
-// Configure secp256k1 with sha256 and hmac
-secp.hashes.sha256 = sha256;
-secp.hashes.hmacSha256 = (key, msg) => hmac(sha256, key, msg);
 
 export class CryptoManager {
   constructor() {
@@ -28,12 +23,12 @@ export class CryptoManager {
   }
 
   generateSeedPhrase() {
-    this.seedPhrase = bip39.generateMnemonic(wordlist);
+    this.seedPhrase = generateMnemonic(wordlist);
     return this.seedPhrase;
   }
 
   setSeedPhrase(seedPhrase) {
-    if (!bip39.validateMnemonic(seedPhrase, wordlist)) {
+    if (!validateMnemonic(seedPhrase, wordlist)) {
       throw new Error('Invalid seed phrase');
     }
     this.seedPhrase = seedPhrase;
@@ -41,11 +36,11 @@ export class CryptoManager {
   }
 
   async deriveKeys() {
-    const seed = await bip39.mnemonicToSeed(this.seedPhrase);
+    const seed = await mnemonicToSeed(this.seedPhrase);
     const privateKey = new Uint8Array(seed.slice(0, 32));
     this.privateKey = privateKey;
     
-    const publicKey = secp.getPublicKey(privateKey, false);
+    const publicKey = getPublicKey(privateKey, false);
     this.publicKey = this.uint8ArrayToHex(publicKey);
   }
 
@@ -62,8 +57,8 @@ export class CryptoManager {
       throw new Error('No private key available');
     }
     
-    const messageHash = sha256(new TextEncoder().encode(message));
-    const signature = await secp.sign(messageHash, this.privateKey);
+    const messageHash = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(message)));
+    const signature = await sign(messageHash, this.privateKey);
     
     return {
       signature: this.uint8ArrayToHex(signature),
@@ -72,11 +67,11 @@ export class CryptoManager {
   }
 
   async verifySignature(message, signature, publicKey) {
-    const messageHash = sha256(new TextEncoder().encode(message));
+    const messageHash = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(message)));
     const signatureBytes = this.hexToUint8Array(signature);
     const publicKeyBytes = this.hexToUint8Array(publicKey);
     
-    return secp.verify(signatureBytes, messageHash, publicKeyBytes);
+    return verify(signatureBytes, messageHash, publicKeyBytes);
   }
 
   async storeSeedPhrase(password) {
@@ -164,7 +159,7 @@ export class CryptoManager {
       );
       
       const seedPhrase = decoder.decode(decrypted);
-      if (bip39.validateMnemonic(seedPhrase, wordlist)) {
+      if (validateMnemonic(seedPhrase, wordlist)) {
         this.setSeedPhrase(seedPhrase);
         return seedPhrase;
       }

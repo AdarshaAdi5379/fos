@@ -15,7 +15,17 @@ const useWebSocket = () => {
     }
     
     try {
-      const ws = new WebSocket('ws://localhost:3000');
+      // Use secure WebSocket in production or when available
+      const protocol = (window.location.protocol === 'https:' || !window.location.hostname.includes('localhost')) ? 'wss:' : 'ws:';
+      const wsUrl = import.meta.env.VITE_WS_URL || `${protocol}//${window.location.hostname}:3000`;
+      
+      // Validate URL to prevent WebSocket hijacking
+      const url = new URL(wsUrl);
+      if (!['ws:', 'wss:'].includes(url.protocol)) {
+        throw new Error('Invalid WebSocket protocol');
+      }
+      
+      const ws = new WebSocket(wsUrl);
       
       ws.onopen = () => {
         console.log('✅ WebSocket connected successfully');
@@ -26,27 +36,54 @@ const useWebSocket = () => {
       
       ws.onmessage = (event) => {
         try {
+          // Validate message size to prevent DoS
+          if (event.data.length > 100000) { // 100KB limit
+            console.warn('WebSocket message too large, ignoring');
+            return;
+          }
+
           const message = JSON.parse(event.data);
-          setMessages(prev => [...prev, message]);
           
-          switch (message.type) {
+          // Validate message structure
+          if (!message || typeof message !== 'object') {
+            console.warn('Invalid WebSocket message format');
+            return;
+          }
+
+          // Sanitize message to prevent XSS
+          const sanitizedMessage = {
+            ...message,
+            type: typeof message.type === 'string' ? message.type.replace(/[^a-zA-Z0-9_]/g, '') : 'unknown',
+            data: message.data || null
+          };
+
+          setMessages(prev => [...prev, sanitizedMessage]);
+          
+          switch (sanitizedMessage.type) {
             case 'new_post':
-              // Trigger global refresh if needed
-              if (typeof window.onNewPost === 'function') {
-                window.onNewPost(message.data);
+              // Validate data structure before processing
+              if (sanitizedMessage.data && typeof sanitizedMessage.data === 'object') {
+                if (typeof window.onNewPost === 'function') {
+                  window.onNewPost(sanitizedMessage.data);
+                }
               }
               break;
             case 'post_updated':
-              if (typeof window.onPostUpdated === 'function') {
-                window.onPostUpdated(message.data);
+              if (sanitizedMessage.data && typeof sanitizedMessage.data === 'object') {
+                if (typeof window.onPostUpdated === 'function') {
+                  window.onPostUpdated(sanitizedMessage.data);
+                }
               }
               break;
             case 'connected':
               console.log('WebSocket connection confirmed');
               break;
+            default:
+              console.warn('Unknown WebSocket message type:', sanitizedMessage.type);
           }
         } catch (error) {
           console.error('WebSocket message parse error:', error);
+          // Don't expose error details to potential attackers
         }
       };
       
