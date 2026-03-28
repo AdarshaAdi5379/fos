@@ -5,6 +5,7 @@ import './styles/design-tokens.css'
 import './styles/global.css'
 import './styles/layout.css'
 import './styles/wallet.css'
+import './styles/settings.css'
 import App from './App.tsx'
 
 const root = document.getElementById('root');

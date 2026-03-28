@@ -7,6 +7,7 @@ import { FeedHeader } from './components/Feed/FeedHeader';
 import { ComposeBox } from './components/Feed/ComposeBox';
 import { PostCard } from './components/Feed/PostCard';
 import { WalletPanel } from './components/Wallet/WalletPanel';
+import { SettingsPanel } from './components/Settings/SettingsPanel';
 import { ProfileService } from './services/ProfileService';
 
 const cryptoManager = new CryptoManager();
@@ -1136,6 +1137,13 @@ function App() {
             accessToken={accessToken ?? ''}
             cryptoManager={cryptoManager}
             liveBalance={walletBalance}
+          />
+        ) : currentView === 'settings' ? (
+          <SettingsPanel
+            publicKey={publicKey}
+            accessToken={accessToken}
+            cryptoManager={cryptoManager}
+            onLogout={handleLogout}
           />
         ) : currentView === 'profile' ? (
           <>
