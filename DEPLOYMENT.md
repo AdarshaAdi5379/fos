@@ -40,8 +40,8 @@ cd unbound
 
 ### 2. Environment Configuration
 ```bash
-# Copy production environment template
-cp .env.production .env
+# Copy environment template (do not commit your real .env)
+cp .env.example .env
 
 # Edit with your production values
 nano .env

@@ -334,7 +334,7 @@ ENABLE_DEBUG_LOGGING=true
 
 ### Production Environment
 ```bash
-# .env.production
+# Production .env (example; do not commit)
 NODE_ENV=production
 API_BASE_URL=https://your-domain.com
 WS_URL=wss://your-domain.com

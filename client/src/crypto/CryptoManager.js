@@ -201,7 +201,7 @@ class CryptoManager {
       // Sign with private key.
       // NOTE: In @noble/secp256k1 v3, `sign()` returns a Uint8Array (compact 64-byte signature by default).
       const privateKeyBytes = etc.hexToBytes(this.privateKey);
-      const sigBytes = sign(messageHash, privateKeyBytes, { lowS: true });
+      const sigBytes = await sign(messageHash, privateKeyBytes, { lowS: true });
 
       // Convert to hex for transport (server expects compact signature hex)
       const signatureHex = etc.bytesToHex(sigBytes);

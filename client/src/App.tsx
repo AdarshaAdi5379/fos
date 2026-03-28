@@ -75,7 +75,7 @@ function App() {
   
   // Navigation state
   const [currentView, setCurrentView] = useState('home');
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState('global');
   
   // Edit state
   const [editingPost, setEditingPost] = useState<number | null>(null);
@@ -211,12 +211,12 @@ function App() {
 
             switch (message.type) {
               case 'new_post':
-                if (activeTabRef.current === 'all') {
+                if (activeTabRef.current === 'global') {
                   setPosts(prev => [message.data, ...prev.slice(0, 99)]);
                 }
                 break;
               case 'post_updated':
-                if (activeTabRef.current === 'all') {
+                if (activeTabRef.current === 'global') {
                   setPosts(prev => prev.map(post =>
                     post.id === message.data.id ? message.data : post
                   ));
@@ -1270,7 +1270,7 @@ function App() {
               title={currentView === 'explore' ? 'Explore' : currentView === 'settings' ? 'Settings' : 'Home'}
               activeTab={activeTab}
               tabs={[
-                { id: 'all', label: 'All Posts' },
+                { id: 'global', label: 'Global' },
                 { id: 'following', label: 'Following' }
               ]}
               onTabChange={setActiveTab}
