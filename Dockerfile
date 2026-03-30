@@ -9,7 +9,7 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Install dependencies
-COPY package.json ./
+COPY package.json package-lock.json* ./
 RUN npm install
 
 # Development stage
@@ -30,6 +30,7 @@ RUN apk add --no-cache libc6-compat
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+RUN npm install --prefix server
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs
