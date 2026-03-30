@@ -8,12 +8,9 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Install dependencies based on the preferred package manager
-COPY package.json package-lock.json* ./
-RUN \
-  if [ -f package-lock.json ]; then npm ci; \
-  else echo "Lockfile not found." && exit 1; \
-  fi
+# Install dependencies
+COPY package.json ./
+RUN npm install
 
 # Development stage
 FROM base AS development
